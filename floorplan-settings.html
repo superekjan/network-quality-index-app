@@ -1079,55 +1079,57 @@ function renderWalls() {
 
     const group = new Konva.Group({ name: 'wall' });
 
-    // 墙体底部投影（最底层，偏移模拟立体感）
+    // 墙体阴影（底层，偏移模拟立体感）
     const shadowLine = new Konva.Line({
       points: [p1.x, p1.y, p2.x, p2.y],
       stroke: 'rgba(0,0,0,0.08)',
-      strokeWidth: (isSelected ? 10 : 9) * scale,
-      lineCap: 'square',
+      strokeWidth: (isSelected ? 8 : 7) * scale,
+      lineCap: 'round',
       hitStrokeWidth: 0
     });
-    shadowLine.offsetY(2 * scale);
+    shadowLine.offsetY(1.5 * scale);
     group.add(shadowLine);
 
-    // 墙体侧边暗面
+    // 墙体主体（白色，有厚度感）
+    const wallLine = new Konva.Line({
+      points: [p1.x, p1.y, p2.x, p2.y],
+      stroke: isSelected ? '#1677FF' : '#ffffff',
+      strokeWidth: (isSelected ? 7 : 6) * scale,
+      lineCap: 'round',
+      hitStrokeWidth: 20 * scale,
+      shadowColor: 'rgba(0,0,0,0.06)',
+      shadowBlur: 3 * scale,
+      shadowOffsetY: 1 * scale
+    });
+    group.add(wallLine);
+
+    // 墙体边线（微妙的灰色描边增加立体感）
     const borderLine = new Konva.Line({
       points: [p1.x, p1.y, p2.x, p2.y],
-      stroke: isSelected ? 'rgba(22,119,255,0.4)' : 'rgba(160,170,185,0.6)',
+      stroke: isSelected ? 'rgba(22,119,255,0.4)' : 'rgba(180,195,210,0.5)',
       strokeWidth: (isSelected ? 8 : 7) * scale,
-      lineCap: 'square',
+      lineCap: 'round',
       hitStrokeWidth: 0
     });
     group.add(borderLine);
 
-    // 墙体顶面亮面
-    const wallLine = new Konva.Line({
+    // 重新绘制白色内芯（覆盖边线内部，形成"描边"效果）
+    const innerLine = new Konva.Line({
       points: [p1.x, p1.y, p2.x, p2.y],
-      stroke: isSelected ? '#1677FF' : 'rgba(240,243,248,0.95)',
-      strokeWidth: (isSelected ? 6 : 5) * scale,
-      lineCap: 'square',
-      hitStrokeWidth: 20 * scale
-    });
-    group.add(wallLine);
-
-    // 墙体顶部高光
-    const highlightLine = new Konva.Line({
-      points: [p1.x, p1.y, p2.x, p2.y],
-      stroke: isSelected ? 'rgba(22,119,255,0.6)' : 'rgba(255,255,255,0.9)',
-      strokeWidth: (isSelected ? 3 : 2) * scale,
-      lineCap: 'square',
+      stroke: isSelected ? '#1677FF' : '#ffffff',
+      strokeWidth: (isSelected ? 5 : 4.5) * scale,
+      lineCap: 'round',
       hitStrokeWidth: 0
     });
-    highlightLine.offsetY(-1 * scale);
-    group.add(highlightLine);
+    group.add(innerLine);
 
     // 端点圆（白色圆点，像建筑图纸的节点）
     const anchorRadius = (isSelected ? 6 : 4.5) * scale;
     const startCircle = new Konva.Circle({
       x: p1.x, y: p1.y,
       radius: anchorRadius,
-      fill: isSelected ? '#1677FF' : 'rgba(240,243,248,0.95)',
-      stroke: isSelected ? 'rgba(22,119,255,0.6)' : 'rgba(160,170,185,0.6)',
+      fill: isSelected ? '#1677FF' : '#ffffff',
+      stroke: isSelected ? 'rgba(22,119,255,0.6)' : 'rgba(180,195,210,0.6)',
       strokeWidth: 1.5 * scale,
       shadowColor: 'rgba(0,0,0,0.06)',
       shadowBlur: 2 * scale,
@@ -1140,8 +1142,8 @@ function renderWalls() {
     const endCircle = new Konva.Circle({
       x: p2.x, y: p2.y,
       radius: anchorRadius,
-      fill: isSelected ? '#1677FF' : 'rgba(240,243,248,0.95)',
-      stroke: isSelected ? 'rgba(22,119,255,0.6)' : 'rgba(160,170,185,0.6)',
+      fill: isSelected ? '#1677FF' : '#ffffff',
+      stroke: isSelected ? 'rgba(22,119,255,0.6)' : 'rgba(180,195,210,0.6)',
       strokeWidth: 1.5 * scale,
       shadowColor: 'rgba(0,0,0,0.06)',
       shadowBlur: 2 * scale,

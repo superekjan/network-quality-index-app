@@ -332,21 +332,16 @@ function generateFloorplanSvg(layout, options = {}) {
     }
   });
 
-  // 墙体（3D立体效果：底部阴影→侧边暗面→顶面亮面→高光）
+  // 墙体
   const walls = layout.walls || [];
   walls.forEach(wall => {
     const x1 = GRID_OFFSET_X + wall.x1 * GRID_SIZE;
     const y1 = GRID_OFFSET_Y + wall.y1 * GRID_SIZE;
     const x2 = GRID_OFFSET_X + wall.x2 * GRID_SIZE;
     const y2 = GRID_OFFSET_Y + wall.y2 * GRID_SIZE;
-    // 底部投影
-    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(0,0,0,0.08)" stroke-width="9" stroke-linecap="square" transform="translate(0,2)"/>`;
-    // 侧边暗面
-    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(160,170,185,0.6)" stroke-width="7" stroke-linecap="square"/>`;
-    // 顶面亮面
-    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(240,243,248,0.95)" stroke-width="5" stroke-linecap="square"/>`;
-    // 顶部高光
-    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="square" transform="translate(0,-1)"/>`;
+    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(0,0,0,0.06)" stroke-width="7" stroke-linecap="round" transform="translate(0,1.5)"/>`;
+    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(180,195,210,0.5)" stroke-width="7" stroke-linecap="round"/>`;
+    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/>`;
   });
 
   // 路由器标记
@@ -462,14 +457,9 @@ function generateRouterSvg(layout) {
     const y1 = GRID_OFFSET_Y + wall.y1 * GRID_SIZE;
     const x2 = GRID_OFFSET_X + wall.x2 * GRID_SIZE;
     const y2 = GRID_OFFSET_Y + wall.y2 * GRID_SIZE;
-    // 底部投影
-    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(0,0,0,0.08)" stroke-width="9" stroke-linecap="square" transform="translate(0,2)"/>`;
-    // 侧边暗面
-    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(160,170,185,0.6)" stroke-width="7" stroke-linecap="square"/>`;
-    // 顶面亮面
-    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(240,243,248,0.95)" stroke-width="5" stroke-linecap="square"/>`;
-    // 顶部高光
-    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="square" transform="translate(0,-1)"/>`;
+    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(0,0,0,0.06)" stroke-width="7" stroke-linecap="round" transform="translate(0,1.5)"/>`;
+    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(180,195,210,0.5)" stroke-width="7" stroke-linecap="round"/>`;
+    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/>`;
   });
 
   return svg;
@@ -497,14 +487,9 @@ function generateThumbSvg(layout) {
     const y1 = GRID_OFFSET_Y + wall.y1 * GRID_SIZE;
     const x2 = GRID_OFFSET_X + wall.x2 * GRID_SIZE;
     const y2 = GRID_OFFSET_Y + wall.y2 * GRID_SIZE;
-    // 底部投影
-    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(0,0,0,0.08)" stroke-width="9" stroke-linecap="square" transform="translate(0,2)"/>`;
-    // 侧边暗面
-    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(160,170,185,0.6)" stroke-width="7" stroke-linecap="square"/>`;
-    // 顶面亮面
-    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(240,243,248,0.95)" stroke-width="5" stroke-linecap="square"/>`;
-    // 顶部高光
-    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="square" transform="translate(0,-1)"/>`;
+    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(0,0,0,0.06)" stroke-width="7" stroke-linecap="round" transform="translate(0,1.5)"/>`;
+    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(180,195,210,0.5)" stroke-width="7" stroke-linecap="round"/>`;
+    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/>`;
   });
   return svg;
 }
