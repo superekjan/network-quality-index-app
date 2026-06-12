@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>网络状态 - 网络质量指数</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+  @import url('shadcn-tokens.css');
+
+  :root {
+    --accent-cyan: var(--brand);
+    --accent-blue: #0EA5E9;
+    --accent-green: var(--success);
+    --accent-orange: var(--warning);
+    --accent-red: var(--danger);
+    --glow-cyan: rgba(22,119,255,0.2);
+  }
+
+  body {
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .icon-svg { display:block; }
+
+  /* 顶部导航 */
+  /* 主内容 - 全屏布局 */
+  .main-content {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 户型图+热力图区域 - 上半屏50%，固定不滚动 */
+  .floorplan-view {
+    position: fixed;
+    top: calc(var(--nav-height) + var(--space-4));
+    left: 0;
+    right: 0;
+    height: 50vh;
+    background: transparent;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  .floorplan-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none;
+  }
+
+  .floorplan-svg text {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .wall-line {
+    stroke: var(--floorplan-line);
+    stroke-width: 1.5;
+    fill: none;
+    filter: url(#wallGlow);
+  }
+
+  .wall-outer {
+    stroke: rgba(160,158,154,0.35);
+    stroke-width: 2;
+    fill: none;
+    filter: url(#wallGlow);
+  }
+
+  .door-arc {
+    stroke: rgba(160,158,154,0.2);
+    stroke-width: 1;
+    fill: none;
+    stroke-dasharray: 3 3;
+  }
+
+  .window-line {
+    stroke: rgba(22,119,255,0.2);
+    stroke-width: 2;
+    fill: none;
+    stroke-dasharray: 6 4;
+  }
+
+  .room-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 400;
+    fill: rgba(142,142,147,0.4);
+    text-anchor: middle;
+    letter-spacing: 1px;
+  }
+
+  .room-area {
+    font-family: 'Inter', sans-serif;
+    font-size: 8px;
+    font-weight: 400;
+    fill: rgba(142,142,147,0.25);
+    text-anchor: middle;
+  }
+
+  /* 信号图例 - 户型图左下角 */
+  .signal-legend {
+    position: absolute;
+    bottom: var(--space-3);
+    left: var(--space-3);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 10px;
+    color: var(--text-tertiary);
+  }
+
+  .legend-bar {
+    width: 48px;
+    height: 4px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(90deg, var(--heatmap-weak), var(--heatmap-medium), var(--heatmap-strong));
+  }
+
+  .legend-label {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  /* 操作按钮 - 浮动底部 */
+  .action-buttons {
+    position: fixed;
+    bottom: calc(env(safe-area-inset-bottom, 20px) + var(--space-4));
+    left: var(--space-6);
+    right: var(--space-6);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-2);
+    z-index: 50;
+  }
+
+  .action-btn {
+    background: var(--card);
+    border: var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    text-align: center;
+  }
+
+  .action-btn:hover { box-shadow: var(--shadow-hover); }
+  .action-btn:active { transform: scale(0.97); }
+
+  .action-btn .action-icon {
+    width: var(--btn-height); height: var(--btn-height);
+    border-radius: var(--radius);
+    background: var(--brand-muted);
+    border: 1px solid var(--brand-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .action-btn .action-icon svg { width: var(--icon-sm); height: var(--icon-sm); color: var(--brand); }
+  .action-btn .action-info { width: 100%; }
+  .action-btn .action-title { font-size: var(--text-sm); font-weight: 500; color: var(--text-primary); margin-bottom: 2px; }
+  .action-btn .action-desc { font-size: var(--text-xs); font-weight: 400; color: var(--text-tertiary); line-height: 1.3; }
+  .action-btn .action-arrow { display: none; }
+</style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<div class="top-nav">
+  <div class="back-btn" onclick="history.back()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+  </div>
+  <span class="title">网络状态</span>
+  <div class="nav-spacer"></div>
+</div>
+
+<!-- 主内容 -->
+<div class="main-content">
+
+  <!-- 户型图+热力图 -->
+  <div class="floorplan-view" id="floorplanView">
+    <svg class="floorplan-svg" id="floorplanSvg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="wallGlow">
+          <feGaussianBlur stdDeviation="1.5" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="routerShadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="rgba(0,0,0,0.15)"/>
+        </filter>
+        <!-- 路由器信号热力图渐变 -->
+        <radialGradient id="routerHeat1" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="rgba(22,119,255,0.18)"/>
+          <stop offset="70%" stop-color="rgba(22,119,255,0.06)"/>
+          <stop offset="100%" stop-color="rgba(22,119,255,0)"/>
+        </radialGradient>
+        <radialGradient id="routerHeat2" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="rgba(126,184,216,0.16)"/>
+          <stop offset="70%" stop-color="rgba(126,184,216,0.05)"/>
+          <stop offset="100%" stop-color="rgba(126,184,216,0)"/>
+        </radialGradient>
+        <radialGradient id="routerHeat3" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="rgba(140,197,160,0.16)"/>
+          <stop offset="70%" stop-color="rgba(140,197,160,0.05)"/>
+          <stop offset="100%" stop-color="rgba(140,197,160,0)"/>
+        </radialGradient>
+      </defs>
+
+      <!-- 热力图层（裁剪到房间范围内） -->
+      <g id="heatmapLayer" clip-path="url(#roomsClip)"></g>
+
+      <!-- 户型图内容（房间层） -->
+      <g id="floorplanContent"></g>
+
+      <!-- 路由器层 -->
+      <g id="routerLayer"></g>
+    </svg>
+
+    <!-- 信号图例 -->
+    <div class="signal-legend">
+      <span class="legend-label">弱</span>
+      <div class="legend-bar"></div>
+      <span class="legend-label">强</span>
+    </div>
+  </div>
+
+  <!-- 操作按钮 -->
+  <div class="action-buttons">
+    <a class="action-btn" href="router-position.html">
+      <div class="action-icon">
+        <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="10" width="20" height="8" rx="2"/><line x1="6" y1="14" x2="6" y2="14.01"/><line x1="10" y1="14" x2="10" y2="14.01"/><path d="M12 10V6"/><path d="M8 6h8"/>
+        </svg>
+      </div>
+      <div class="action-info">
+        <div class="action-title">路由器位置</div>
+        <div class="action-desc">调整路由器摆放位置</div>
+      </div>
+      <svg class="action-arrow icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    </a>
+    <a class="action-btn" href="floorplan-settings.html">
+      <div class="action-icon">
+        <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>
+        </svg>
+      </div>
+      <div class="action-info">
+        <div class="action-title">户型图设置</div>
+        <div class="action-desc">选择和配置户型模板</div>
+      </div>
+      <svg class="action-arrow icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    </a>
+  </div>
+
+</div>
+
+<script src="floorplan-config.js"></script>
+<script>
+const svg = document.getElementById('floorplanSvg');
+const floorplanContent = document.getElementById('floorplanContent');
+const heatmapLayer = document.getElementById('heatmapLayer');
+const routerLayer = document.getElementById('routerLayer');
+let svgPoint = svg.createSVGPoint();
+
+// ============ 生成白色3D路由器SVG ============
+function createRouterSvg(index) {
+  const device = ROUTER_DEVICES[index];
+  const isOnline = device.status === 'online';
+  const opacity = isOnline ? 1 : 0.5;
+  const s = 1.5;
+
+  return `
+    <circle cx="0" cy="0" r="${18*s}" fill="${device.color}" opacity="${opacity}"/>
+    <circle cx="0" cy="0" r="${12*s}" fill="${device.color}" opacity="${opacity * 0.5}"/>
+    <g filter="url(#routerShadow)" opacity="${opacity}" transform="scale(${s})">
+      <ellipse cx="0" cy="4" rx="9" ry="3" fill="rgba(0,0,0,0.08)"/>
+      <path d="M-8,-2 L-8,2 Q-8,5 0,5 Q8,5 8,2 L8,-2 Q8,1 0,1 Q-8,1 -8,-2Z" fill="#d1d1d6"/>
+      <path d="M-8,-6 Q-8,-2 0,-2 Q8,-2 8,-6 L8,-2 Q8,1 0,1 Q-8,1 -8,-2Z" fill="#f2f2f7"/>
+      <path d="M-8,-6 Q-8,-9 0,-9 Q8,-9 8,-6 Q8,-2 0,-2 Q-8,-2 -8,-6Z" fill="white"/>
+      <line x1="-3" y1="-9" x2="-4" y2="-15" stroke="#c7c7cc" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="-4" cy="-15.5" r="1" fill="#c7c7cc"/>
+      <line x1="3" y1="-9" x2="4" y2="-15" stroke="#c7c7cc" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="4" cy="-15.5" r="1" fill="#c7c7cc"/>
+      <circle cx="-3" cy="-5" r="0.8" fill="${isOnline ? '#1677FF' : '#aeaeb2'}"/>
+      <circle cx="0" cy="-5" r="0.8" fill="${isOnline ? '#1677FF' : '#aeaeb2'}"/>
+      <circle cx="3" cy="-5" r="0.8" fill="${isOnline ? '#8cc5a0' : '#aeaeb2'}"/>
+    </g>
+  `;
+}
+
+// ============ 渲染户型图 ============
+function renderFloorplan() {
+  const layout = getFloorplanLayout();
+  floorplanContent.innerHTML = generateRouterSvg(layout);
+}
+
+// ============ 渲染热力图和路由器 ============
+function renderRouters() {
+  const routerPositions = getRouterPositions();
+
+  // 渲染信号强度热力图（绿→红渐变）
+  const layout = getFloorplanLayout();
+  heatmapLayer.innerHTML = generateSignalHeatmapSvg(layout);
+
+  // 渲染路由器图标（仅在线路由器）
+  let routerSvg = '';
+  routerPositions.forEach((rp, i) => {
+    const device = ROUTER_DEVICES[i];
+    if (!device || device.status !== 'online') return;
+    routerSvg += `<g transform="translate(${rp.x}, ${rp.y})">${createRouterSvg(i)}</g>`;
+  });
+  routerLayer.innerHTML = routerSvg;
+}
+
+// 初始化
+renderFloorplan();
+renderRouters();
+</script>
+</body>
+</html>

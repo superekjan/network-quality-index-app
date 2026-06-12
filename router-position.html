@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>路由器位置 - 网络质量指数</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+  @import url('shadcn-tokens.css');
+
+  :root {
+    --accent-cyan: var(--brand);
+    --accent-blue: #0EA5E9;
+    --accent-green: var(--success);
+    --accent-orange: var(--warning);
+    --accent-red: var(--danger);
+    --glow-cyan: rgba(22,119,255,0.2);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    margin: 0;
+  }
+
+  .icon-svg { display:block; }
+
+  /* 顶部导航 */
+
+  /* 主内容 - flex布局，户型图固定上半屏，下半屏可滚动 */
+  .main-content {
+    position: relative;
+    z-index: 1;
+    padding-top: calc(var(--nav-height) + var(--space-4));
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 户型图区域 - 上半屏50%，固定不滚动 */
+  .floorplan-canvas {
+    position: relative;
+    width: 100%;
+    height: 50vh;
+    flex-shrink: 0;
+    background: transparent;
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  .floorplan-canvas svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .floorplan-canvas svg text {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .wall-line {
+    stroke: var(--floorplan-line);
+    stroke-width: 1.5;
+    fill: none;
+    filter: url(#wallGlow);
+  }
+
+  .wall-outer {
+    stroke: rgba(160,158,154,0.35);
+    stroke-width: 2;
+    fill: none;
+    filter: url(#wallGlow);
+  }
+
+  .door-arc {
+    stroke: rgba(160,158,154,0.2);
+    stroke-width: 1;
+    fill: none;
+    stroke-dasharray: 3 3;
+  }
+
+  .window-line {
+    stroke: rgba(22,119,255,0.2);
+    stroke-width: 2;
+    fill: none;
+    stroke-dasharray: 6 4;
+  }
+
+  .room-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 400;
+    fill: rgba(142,142,147,0.4);
+    text-anchor: middle;
+    letter-spacing: 1px;
+  }
+
+  .room-area {
+    font-family: 'Inter', sans-serif;
+    font-size: 8px;
+    font-weight: 400;
+    fill: rgba(142,142,147,0.25);
+    text-anchor: middle;
+  }
+
+  /* 拖拽提示 */
+  .drag-hint {
+    position: absolute;
+    top: var(--space-2);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: var(--space-2) var(--space-3);
+    background: var(--overlay);
+    backdrop-filter: blur(var(--overlay-blur));
+    -webkit-backdrop-filter: blur(var(--overlay-blur));
+    border: var(--border);
+    border-radius: var(--radius);
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    z-index: 60;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  .drag-hint.hidden { opacity: 0; }
+
+  /* 信号图例 - 户型图左下角 */
+  .signal-legend {
+    position: absolute;
+    bottom: var(--space-3);
+    left: var(--space-3);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 10px;
+    color: var(--text-tertiary);
+  }
+
+  .legend-bar {
+    width: 48px;
+    height: 4px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(90deg, var(--heatmap-weak), var(--heatmap-medium), var(--heatmap-strong));
+  }
+
+  .legend-label {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  /* 路由器可拖拽 */
+  .router-draggable {
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .router-draggable .router-scale {
+    transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    transform: scale(1);
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .router-draggable.pressing .router-scale {
+    transform: scale(1.25);
+  }
+
+  .router-draggable.dragging .router-scale {
+    transform: scale(1.15);
+    transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  .router-draggable.dragging {
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.25));
+  }
+
+  .router-pulse {
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.15; }
+    50% { opacity: 0.05; }
+  }
+
+  .router-ring-anim {
+    animation: ringPulse 2.5s ease-in-out infinite 0.3s;
+  }
+
+  @keyframes ringPulse {
+    0%, 100% { opacity: 0.1; }
+    50% { opacity: 0.03; }
+  }
+
+  /* 信号覆盖热力图 */
+  .coverage-heatmap {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  /* 下半屏可滚动区域 */
+  .bottom-scroll {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 80px;
+  }
+
+  .section-title {
+    font-size: var(--text-xs);
+    font-weight: 500;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+    margin: var(--space-4) 0 var(--space-3);
+    padding: 0 var(--space-6);
+  }
+
+  /* 路由器列表 */
+  .router-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: 0 var(--space-6);
+  }
+
+  .router-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--card-padding);
+    background: var(--bg-subtle);
+    border: 1.5px solid transparent;
+    border-radius: var(--radius);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .router-item:active { transform: scale(0.98); }
+
+  .router-item.checked {
+    border-color: var(--brand-border);
+    background: var(--brand-muted);
+  }
+
+  .router-item.unchecked {
+    opacity: 0.5;
+  }
+
+  /* 勾选框 */
+  .router-checkbox {
+    width: var(--icon-md);
+    height: var(--icon-md);
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+  }
+
+  .router-item.checked .router-checkbox {
+    background: var(--brand);
+    border-color: var(--brand);
+  }
+
+  .router-checkbox svg {
+    width: 12px;
+    height: 12px;
+    color: white;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .router-item.checked .router-checkbox svg {
+    opacity: 1;
+  }
+
+  .router-item .router-icon {
+    width: var(--btn-height);
+    height: var(--btn-height);
+    border-radius: var(--radius);
+    background: var(--brand-muted);
+    border: 1px solid var(--brand-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .router-item .router-icon svg { width: var(--icon-sm); height: var(--icon-sm); color: var(--brand); }
+  .router-item .router-info { flex: 1; min-width: 0; }
+  .router-item .router-name { font-size: var(--text-sm); font-weight: 500; color: var(--text-primary); margin-bottom: 2px; }
+  .router-item .router-model { font-size: var(--text-xs); font-weight: 400; color: var(--text-tertiary); }
+
+  .router-item .router-pos {
+    font-size: var(--text-xs);
+    color: var(--brand);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+  }
+
+  .status-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+
+  .status-dot.online { background: var(--accent-green); }
+  .status-dot.offline { background: var(--text-tertiary); }
+
+  /* 底部固定操作 - 与户型图设计页面一致 */
+  .bottom-actions {
+    position: fixed;
+    bottom: 0;
+    left: 0; right: 0;
+    padding: var(--space-3) var(--space-6) calc(env(safe-area-inset-bottom, 20px) + var(--space-3));
+    background: var(--card);
+    border-top: var(--border);
+    box-shadow: var(--shadow-hover);
+    z-index: 100;
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .bottom-btn {
+    flex: 1;
+    height: var(--btn-height);
+    border-radius: var(--radius);
+    font-family: inherit;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    border: none;
+  }
+
+  .bottom-btn:active { transform: scale(0.97); }
+
+  .bottom-btn.primary {
+    background: var(--brand);
+    color: var(--brand-foreground);
+  }
+
+  .bottom-btn.secondary {
+    background: var(--bg-subtle);
+    border: var(--border);
+    color: var(--text-secondary);
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    padding: var(--space-3) var(--space-6);
+    background: var(--text-primary);
+    border-radius: var(--radius);
+    font-size: var(--text-sm);
+    font-weight: 400;
+    color: var(--bg);
+    z-index: 200;
+    opacity: 0;
+    transition: all 0.2s ease;
+    pointer-events: none;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+</style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<div class="top-nav">
+  <div class="back-btn" onclick="history.back()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+  </div>
+  <span class="title">路由器位置</span>
+  <div class="nav-spacer"></div>
+</div>
+
+<!-- 主内容 -->
+<div class="main-content">
+
+  <!-- 户型图区域 - 上半屏50%，固定不滚动 -->
+  <div class="floorplan-canvas" id="floorplanCanvas">
+    <svg id="floorplanSvg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="wallGlow">
+          <feGaussianBlur stdDeviation="1.5" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <radialGradient id="routerHeat1" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="rgba(22,119,255,0.18)"/>
+          <stop offset="70%" stop-color="rgba(22,119,255,0.06)"/>
+          <stop offset="100%" stop-color="rgba(22,119,255,0)"/>
+        </radialGradient>
+        <radialGradient id="routerHeat2" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="rgba(126,184,216,0.16)"/>
+          <stop offset="70%" stop-color="rgba(126,184,216,0.05)"/>
+          <stop offset="100%" stop-color="rgba(126,184,216,0)"/>
+        </radialGradient>
+        <radialGradient id="routerHeat3" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="rgba(140,197,160,0.16)"/>
+          <stop offset="70%" stop-color="rgba(140,197,160,0.05)"/>
+          <stop offset="100%" stop-color="rgba(140,197,160,0)"/>
+        </radialGradient>
+        <filter id="routerShadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="rgba(0,0,0,0.15)"/>
+        </filter>
+      </defs>
+
+      <!-- 热力图层 -->
+      <g id="heatmapLayer" clip-path="url(#roomsClip)"></g>
+
+      <!-- 户型图内容 -->
+      <g id="floorplanContent"></g>
+
+      <!-- 路由器层 -->
+      <g id="routerLayer"></g>
+    </svg>
+
+    <!-- 拖拽提示 -->
+    <div class="drag-hint" id="dragHint">拖拽路由器图标调整位置</div>
+
+    <!-- 信号图例 -->
+    <div class="signal-legend">
+      <span class="legend-label">弱</span>
+      <div class="legend-bar"></div>
+      <span class="legend-label">强</span>
+    </div>
+  </div>
+
+  <!-- 下半屏可滚动区域 -->
+  <div class="bottom-scroll">
+    <div class="section-title">路由器设备</div>
+    <div class="router-list" id="routerList"></div>
+  </div>
+</div>
+
+<!-- 底部固定操作 -->
+<div class="bottom-actions">
+  <button class="bottom-btn secondary" onclick="history.back()">取消</button>
+  <button class="bottom-btn primary" onclick="saveAllPositions()">保存位置</button>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">位置已保存</div>
+
+<script src="floorplan-config.js"></script>
+<script>
+const svg = document.getElementById('floorplanSvg');
+const floorplanContent = document.getElementById('floorplanContent');
+const heatmapLayer = document.getElementById('heatmapLayer');
+const routerLayer = document.getElementById('routerLayer');
+const routerListEl = document.getElementById('routerList');
+const dragHint = document.getElementById('dragHint');
+
+let svgPoint = svg.createSVGPoint();
+let routerPositions = getRouterPositions();
+let draggingIndex = -1;
+
+// 路由器启用状态（勾选=启用显示在户型图上）
+let routerEnabled = {};
+
+// 初始化：默认所有在线路由器启用
+function initRouterEnabled() {
+  ROUTER_DEVICES.forEach((d, i) => {
+    routerEnabled[i] = d.status === 'online';
+  });
+  // 从localStorage恢复
+  const saved = localStorage.getItem('floorplan_router_enabled');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      Object.assign(routerEnabled, parsed);
+    } catch(e) {}
+  }
+}
+
+function saveRouterEnabled() {
+  localStorage.setItem('floorplan_router_enabled', JSON.stringify(routerEnabled));
+}
+
+// ============ 渲染户型图 ============
+function renderFloorplan() {
+  const layout = getFloorplanLayout();
+  floorplanContent.innerHTML = generateRouterSvg(layout);
+}
+
+// ============ 生成3D路由器SVG ============
+function createRouterSvg(index) {
+  const device = ROUTER_DEVICES[index];
+  const isOnline = device.status === 'online';
+  const opacity = isOnline ? 1 : 0.5;
+  const s = 1.5;
+
+  return `
+    <circle class="router-ring-anim" cx="0" cy="0" r="${18*s}" fill="${device.color}" opacity="${opacity}"/>
+    <circle class="router-pulse" cx="0" cy="0" r="${12*s}" fill="${device.color}" opacity="${opacity * 0.5}"/>
+    <g filter="url(#routerShadow)" opacity="${opacity}" transform="scale(${s})">
+      <ellipse cx="0" cy="4" rx="9" ry="3" fill="rgba(0,0,0,0.08)"/>
+      <path d="M-8,-2 L-8,2 Q-8,5 0,5 Q8,5 8,2 L8,-2 Q8,1 0,1 Q-8,1 -8,-2Z" fill="#d1d1d6"/>
+      <path d="M-8,-6 Q-8,-2 0,-2 Q8,-2 8,-6 L8,-2 Q8,1 0,1 Q-8,1 -8,-2Z" fill="#f2f2f7"/>
+      <path d="M-8,-6 Q-8,-9 0,-9 Q8,-9 8,-6 Q8,-2 0,-2 Q-8,-2 -8,-6Z" fill="white"/>
+      <line x1="-3" y1="-9" x2="-4" y2="-15" stroke="#c7c7cc" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="-4" cy="-15.5" r="1" fill="#c7c7cc"/>
+      <line x1="3" y1="-9" x2="4" y2="-15" stroke="#c7c7cc" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="4" cy="-15.5" r="1" fill="#c7c7cc"/>
+      <circle cx="-3" cy="-5" r="0.8" fill="${isOnline ? '#1677FF' : '#aeaeb2'}"/>
+      <circle cx="0" cy="-5" r="0.8" fill="${isOnline ? '#1677FF' : '#aeaeb2'}"/>
+      <circle cx="3" cy="-5" r="0.8" fill="${isOnline ? '#8cc5a0' : '#aeaeb2'}"/>
+    </g>
+  `;
+}
+
+// ============ 渲染路由器和热力图 ============
+function renderRouters() {
+  // 渲染热力图
+  updateHeatmap();
+
+  // 渲染路由器图标（仅启用的路由器）
+  let routerSvg = '';
+  routerPositions.forEach((rp, i) => {
+    const device = ROUTER_DEVICES[i];
+    if (!device || !routerEnabled[i]) return;
+    routerSvg += `<g class="router-draggable" data-index="${i}" transform="translate(${rp.x}, ${rp.y})"><g class="router-scale">${createRouterSvg(i)}</g></g>`;
+  });
+  routerLayer.innerHTML = routerSvg;
+
+  // 绑定拖拽事件
+  bindDragEvents();
+
+  // 更新列表中的位置信息
+  updateRouterListPositions();
+}
+
+// ============ 更新热力图 ============
+function updateHeatmap() {
+  const layout = getFloorplanLayout();
+  const enabledRouters = routerPositions.filter((rp, i) => routerEnabled[i]);
+  const dataUrl = generateSignalHeatmapDataUrl(layout, enabledRouters);
+  const img = heatmapLayer.querySelector('image');
+  if (img) {
+    img.setAttribute('href', dataUrl);
+  } else {
+    heatmapLayer.innerHTML = `<image href="${dataUrl}" x="0" y="0" width="400" height="400"/>`;
+  }
+}
+
+// ============ 拖拽逻辑 ============
+let _svgRect = null;
+function updateSvgRect() {
+  _svgRect = svg.getBoundingClientRect();
+}
+
+function getSVGCoords(clientX, clientY) {
+  if (!_svgRect) updateSvgRect();
+  const ctm = svg.getScreenCTM();
+  if (!ctm) return { x: 0, y: 0 };
+  const pt = svg.createSVGPoint();
+  pt.x = clientX;
+  pt.y = clientY;
+  return pt.matrixTransform(ctm.inverse());
+}
+
+function clampToGrid(x, y) {
+  const minX = GRID_OFFSET_X;
+  const maxX = GRID_OFFSET_X + GRID_COLS * GRID_SIZE;
+  const minY = GRID_OFFSET_Y;
+  const maxY = GRID_OFFSET_Y + GRID_ROWS * GRID_SIZE;
+  return {
+    x: Math.max(minX, Math.min(maxX, x)),
+    y: Math.max(minY, Math.min(maxY, y))
+  };
+}
+
+let heatmapRafId = null;
+let hasMoved = false;
+
+function startDrag(index, element) {
+  draggingIndex = index;
+  hasMoved = false;
+  updateSvgRect();
+  element.classList.add('pressing');
+  dragHint.classList.add('hidden');
+}
+
+function moveDrag(clientX, clientY) {
+  if (draggingIndex < 0) return;
+  const coords = getSVGCoords(clientX, clientY);
+  const clamped = clampToGrid(coords.x, coords.y);
+
+  if (!hasMoved) {
+    hasMoved = true;
+    const g = routerLayer.querySelector(`[data-index="${draggingIndex}"]`);
+    if (g) {
+      g.classList.remove('pressing');
+      g.classList.add('dragging');
+    }
+  }
+
+  // 直接更新DOM位置
+  const g = routerLayer.querySelector(`[data-index="${draggingIndex}"]`);
+  if (g) g.setAttribute('transform', `translate(${clamped.x}, ${clamped.y})`);
+
+  // 实时更新路由器位置数据
+  routerPositions[draggingIndex].x = clamped.x;
+  routerPositions[draggingIndex].y = clamped.y;
+
+  // requestAnimationFrame节流更新热力图
+  if (!heatmapRafId) {
+    heatmapRafId = requestAnimationFrame(() => {
+      updateHeatmap();
+      heatmapRafId = null;
+    });
+  }
+}
+
+function endDrag(clientX, clientY) {
+  if (draggingIndex < 0) return;
+  const g = routerLayer.querySelector(`[data-index="${draggingIndex}"]`);
+
+  if (hasMoved && clientX !== undefined) {
+    if (g) g.classList.remove('dragging');
+    const coords = getSVGCoords(clientX, clientY);
+    const clamped = clampToGrid(coords.x, coords.y);
+    routerPositions[draggingIndex].x = clamped.x;
+    routerPositions[draggingIndex].y = clamped.y;
+  } else {
+    if (g) g.classList.remove('pressing');
+  }
+
+  draggingIndex = -1;
+  // 最终更新热力图和列表
+  updateHeatmap();
+  updateRouterListPositions();
+}
+
+// ---- Pointer 事件 ----
+function onRouterPointerDown(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const index = parseInt(e.currentTarget.dataset.index);
+  startDrag(index, e.currentTarget);
+  e.currentTarget.setPointerCapture(e.pointerId);
+}
+
+svg.addEventListener('pointermove', e => {
+  if (draggingIndex < 0) return;
+  e.preventDefault();
+  moveDrag(e.clientX, e.clientY);
+});
+
+svg.addEventListener('pointerup', e => {
+  if (draggingIndex < 0) return;
+  endDrag(e.clientX, e.clientY);
+});
+
+svg.addEventListener('pointercancel', e => {
+  if (draggingIndex < 0) return;
+  endDrag();
+});
+
+// ---- Touch 事件（移动端兜底） ----
+let touchDragIndex = -1;
+
+function onRouterTouchStart(e) {
+  if (e.touches.length !== 1) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const index = parseInt(e.currentTarget.dataset.index);
+  touchDragIndex = index;
+  startDrag(index, e.currentTarget);
+}
+
+function onRouterTouchMove(e) {
+  if (touchDragIndex < 0 || e.touches.length !== 1) return;
+  e.preventDefault();
+  const touch = e.touches[0];
+  moveDrag(touch.clientX, touch.clientY);
+}
+
+function onRouterTouchEnd(e) {
+  if (touchDragIndex < 0) return;
+  e.preventDefault();
+  const touch = e.changedTouches[0];
+  touchDragIndex = -1;
+  endDrag(touch.clientX, touch.clientY);
+}
+
+// 绑定事件到路由器元素
+function bindDragEvents() {
+  routerLayer.querySelectorAll('.router-draggable').forEach(g => {
+    g.addEventListener('pointerdown', onRouterPointerDown);
+    g.addEventListener('touchstart', onRouterTouchStart, { passive: false });
+  });
+  svg.addEventListener('touchmove', onRouterTouchMove, { passive: false });
+  svg.addEventListener('touchend', onRouterTouchEnd, { passive: false });
+  svg.addEventListener('touchcancel', onRouterTouchEnd, { passive: false });
+}
+
+// 窗口resize时更新SVG坐标
+window.addEventListener('resize', () => { _svgRect = null; });
+
+// ============ 路由器列表 ============
+function renderRouterList() {
+  routerListEl.innerHTML = ROUTER_DEVICES.map((device, i) => {
+    const isEnabled = routerEnabled[i];
+    const isOnline = device.status === 'online';
+    return `
+      <div class="router-item${isEnabled ? ' checked' : ' unchecked'}" onclick="toggleRouter(${i})">
+        <div class="router-checkbox">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <div class="router-icon">
+          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="10" width="20" height="8" rx="2"/><line x1="6" y1="14" x2="6" y2="14.01"/><line x1="10" y1="14" x2="10" y2="14.01"/><path d="M12 10V6"/><path d="M8 6h8"/>
+          </svg>
+        </div>
+        <div class="router-info">
+          <div class="router-name"><span class="status-dot ${isOnline ? 'online' : 'offline'}"></span>${device.name}</div>
+          <div class="router-model">${device.model} · ${isOnline ? '在线' : '离线'}</div>
+        </div>
+        <span class="router-pos" id="routerPos${i}"></span>
+      </div>
+    `;
+  }).join('');
+  updateRouterListPositions();
+}
+
+function toggleRouter(index) {
+  routerEnabled[index] = !routerEnabled[index];
+  saveRouterEnabled();
+  renderRouterList();
+  renderRouters();
+}
+
+function updateRouterListPositions() {
+  routerPositions.forEach((rp, i) => {
+    const el = document.getElementById('routerPos' + i);
+    if (el) {
+      const room = getRoomAtPosition(rp.x, rp.y);
+      el.textContent = routerEnabled[i] ? room : '';
+    }
+  });
+}
+
+function getRoomAtPosition(x, y) {
+  const layout = getFloorplanLayout();
+  const rooms = layout.rooms || [];
+  for (const room of rooms) {
+    const rx = GRID_OFFSET_X + room.x * GRID_SIZE;
+    const ry = GRID_OFFSET_Y + room.y * GRID_SIZE;
+    const rw = room.w * GRID_SIZE;
+    const rh = room.h * GRID_SIZE;
+    if (x >= rx && x <= rx + rw && y >= ry && y <= ry + rh) {
+      const mod = getRoomModule(room.moduleId);
+      return mod.name;
+    }
+  }
+  return '未知';
+}
+
+// ============ 保存 ============
+function saveAllPositions() {
+  saveRouterPositions(routerPositions);
+  saveRouterEnabled();
+  const toast = document.getElementById('toast');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 1500);
+}
+
+// ============ 初始化 ============
+initRouterEnabled();
+renderFloorplan();
+renderRouters();
+renderRouterList();
+
+// 3秒后隐藏提示
+setTimeout(() => dragHint.classList.add('hidden'), 3000);
+</script>
+</body>
+</html>

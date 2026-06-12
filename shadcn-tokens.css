@@ -1,0 +1,606 @@
+/* ============================================
+   8pt Grid Design System — 网络质量指数 App
+   Brand: #1677FF (科技蓝)
+   Gray scale: blue-tinted neutrals
+   Grid: 8pt base (4px half-step)
+   ============================================ */
+
+/* ---- Light Mode (default) ---- */
+:root {
+  /* Brand — 白蓝风格 */
+  --brand: #1677FF;
+  --brand-light: #0EA5E9;
+  --brand-foreground: #ffffff;
+  --brand-muted: rgba(22,119,255,0.08);
+  --brand-border: rgba(22,119,255,0.2);
+  --brand-bg: #F0F6FF;
+
+  /* Background — 蓝调白 */
+  --bg: #F5F9FF;
+  --bg-subtle: #EDF3FC;
+  --bg-muted: #DDE7F5;
+
+  /* Card */
+  --card: #ffffff;
+  --card-foreground: #0F1B2D;
+  --card-border: #E5EFFF;
+
+  /* Text — 蓝调深色 */
+  --text-primary: #0F1B2D;
+  --text-secondary: #5A7799;
+  --text-tertiary: #8DA3BD;
+  --text-muted: #C4D3E8;
+
+  /* Semantic */
+  --success: #22c55e;
+  --success-muted: rgba(34,197,94,0.12);
+  --warning: #f59e0b;
+  --warning-muted: rgba(245,158,11,0.12);
+  --danger: #ef4444;
+  --danger-muted: rgba(239,68,68,0.12);
+
+  /* Radius */
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-lg: 14px;
+  --radius-full: 9999px;
+
+  /* Shadow — only 2 levels */
+  --shadow: 0 1px 2px 0 rgba(22,119,255,0.06);
+  --shadow-hover: 0 2px 8px -1px rgba(22,119,255,0.1);
+
+  /* ============================================
+     8pt Grid Spacing
+     Only allowed: 4 / 8 / 12 / 16 / 24 / 32 / 40 / 48
+     ============================================ */
+  --space-1: 4px;     /* 0.5x */
+  --space-2: 8px;     /* 1x   */
+  --space-3: 12px;    /* 1.5x */
+  --space-4: 16px;    /* 2x   */
+  --space-6: 24px;    /* 3x   */
+  --space-8: 32px;    /* 4x   */
+  --space-10: 40px;   /* 5x   */
+  --space-12: 48px;   /* 6x   */
+
+  /* Layout constants */
+  --card-padding: 24px;
+  --card-gap: 16px;
+  --page-padding: 16px;
+  --max-width: 1200px;
+
+  /* Component sizing */
+  --btn-height: 40px;
+  --input-height: 40px;
+  --icon-sm: 16px;
+  --icon-md: 20px;
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 32px;
+
+  /* Motion */
+  --ease-spring: cubic-bezier(0.34,1.56,0.64,1);
+  --ease-out: cubic-bezier(0.16,1,0.3,1);
+  --ease-in-out: cubic-bezier(0.45,0,0.55,1);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+
+  /* Border */
+  --border: 1px solid var(--card-border);
+
+  /* Floorplan */
+  --floorplan-line: rgba(22,119,255,0.15);
+  --floorplan-room-fill: #ffffff;
+  --floorplan-room-stroke: rgba(22,119,255,0.2);
+
+  /* Heatmap */
+  --heatmap-strong: #22c55e;
+  --heatmap-medium: #f59e0b;
+  --heatmap-weak: #ef4444;
+
+  /* Overlay */
+  --overlay: rgba(255,255,255,0.92);
+  --overlay-blur: 16px;
+
+  /* Navigation — 白蓝风格 */
+  --nav-height: 56px;
+  --tab-height: 64px;
+  --nav-btn-size: 34px;
+  --nav-icon-size: 17px;
+}
+
+/* ---- Dark Mode ---- */
+[data-theme="dark"], .dark {
+  --brand: #7ec8c0;
+  --brand-foreground: #18181b;
+  --brand-muted: rgba(22,119,255,0.15);
+  --brand-border: rgba(22,119,255,0.3);
+
+  --bg: #09090b;
+  --bg-subtle: #18181b;
+  --bg-muted: #27272a;
+
+  --card: #18181b;
+  --card-foreground: #fafafa;
+  --card-border: #27272a;
+
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+  --text-tertiary: #71717a;
+  --text-muted: #3f3f46;
+
+  --success: #4ade80;
+  --success-muted: rgba(74,222,128,0.12);
+  --warning: #fbbf24;
+  --warning-muted: rgba(251,191,36,0.12);
+  --danger: #f87171;
+  --danger-muted: rgba(248,113,113,0.12);
+
+  --shadow: 0 1px 2px 0 rgba(0,0,0,0.2);
+  --shadow-hover: 0 2px 8px -1px rgba(0,0,0,0.35);
+
+  --floorplan-line: rgba(113,113,122,0.25);
+  --floorplan-room-fill: #18181b;
+  --floorplan-room-stroke: rgba(113,113,122,0.4);
+
+  --overlay: rgba(9,9,11,0.72);
+  --overlay-blur: 16px;
+}
+
+/* ============================================
+   Base Reset & Typography
+   ============================================ */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* ============================================
+   Layout: Page Container
+   ============================================ */
+.page-container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding-left: var(--page-padding);
+  padding-right: var(--page-padding);
+}
+
+/* ============================================
+   Component: Card
+   ============================================ */
+.card {
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--card-padding);
+  transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-hover);
+}
+
+.card-glass {
+  background: var(--overlay);
+  backdrop-filter: blur(var(--overlay-blur));
+  -webkit-backdrop-filter: blur(var(--overlay-blur));
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* ============================================
+   Component: Button
+   ============================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: var(--btn-height);
+  padding: 0 var(--space-4);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: 1;
+  border-radius: var(--radius);
+  border: var(--border);
+  background: var(--card);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: var(--shadow);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.btn:hover {
+  box-shadow: var(--shadow-hover);
+  background: var(--bg-subtle);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-brand {
+  background: var(--brand);
+  color: var(--brand-foreground);
+  border-color: var(--brand);
+}
+
+.btn-brand:hover {
+  background: var(--brand);
+  opacity: 0.9;
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.btn-ghost:hover {
+  background: var(--bg-subtle);
+  box-shadow: none;
+}
+
+.btn-danger {
+  background: var(--danger-muted);
+  color: var(--danger);
+  border-color: rgba(239,68,68,0.2);
+}
+
+.btn-danger:hover {
+  background: var(--danger-muted);
+  opacity: 0.85;
+}
+
+.btn-sm {
+  height: 32px;
+  padding: 0 var(--space-3);
+  font-size: var(--text-xs);
+  border-radius: var(--radius-sm);
+}
+
+.btn-icon {
+  width: var(--btn-height);
+  height: var(--btn-height);
+  padding: 0;
+  border-radius: var(--radius);
+}
+
+.btn-icon.sm {
+  width: 32px;
+  height: 32px;
+}
+
+/* ============================================
+   Component: Input
+   ============================================ */
+.input {
+  height: var(--input-height);
+  padding: 0 var(--space-4);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-muted);
+}
+
+/* ============================================
+   Component: Badge
+   ============================================ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  border-radius: var(--radius-full);
+  border: var(--border);
+  background: var(--card);
+  color: var(--text-secondary);
+  box-shadow: var(--shadow);
+}
+
+.badge-brand {
+  background: var(--brand-muted);
+  color: var(--brand);
+  border-color: var(--brand-border);
+}
+
+.badge-success {
+  background: var(--success-muted);
+  color: var(--success);
+  border-color: rgba(34,197,94,0.2);
+}
+
+.badge-danger {
+  background: var(--danger-muted);
+  color: var(--danger);
+  border-color: rgba(239,68,68,0.2);
+}
+
+/* ============================================
+   Component: Navigation — 白蓝风格
+   ============================================ */
+
+/* 主页面顶部栏 */
+.top-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--nav-height);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-4);
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 0.5px solid #E5EFFF;
+}
+
+/* 品牌区竖条 */
+.brand-bar {
+  width: 3px;
+  height: 20px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #1677FF, #0EA5E9);
+  flex-shrink: 0;
+  margin-right: var(--space-2);
+}
+
+.brand-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0F1B2D;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  font-feature-settings: 'kern' 1, 'liga' 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.brand-subtitle {
+  font-size: 11px;
+  color: #1677FF;
+  font-weight: 500;
+  margin-left: var(--space-2);
+  white-space: nowrap;
+}
+
+/* 状态徽章 */
+.nav-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: #F0F6FF;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(22,119,255,0.12);
+  flex-shrink: 0;
+}
+
+.nav-badge .badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #1677FF;
+  box-shadow: 0 0 6px rgba(22,119,255,0.4);
+  animation: pulse-dot 2.5s ease-in-out infinite;
+}
+
+.nav-badge .badge-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1677FF;
+}
+
+/* 导航图标按钮 */
+.nav-btn {
+  width: var(--nav-btn-size);
+  height: var(--nav-btn-size);
+  border-radius: 8px;
+  background: #F0F6FF;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 200ms cubic-bezier(0.16,1,0.3,1);
+  flex-shrink: 0;
+}
+
+.nav-btn svg {
+  width: var(--nav-icon-size);
+  height: var(--nav-icon-size);
+  color: #1677FF;
+  stroke-width: 1.8;
+}
+
+.nav-btn:active {
+  transform: scale(0.94);
+  background: #DDE7F5;
+}
+
+/* 子页面返回按钮 */
+.back-btn {
+  width: var(--nav-btn-size);
+  height: var(--nav-btn-size);
+  border-radius: 8px;
+  background: #F0F6FF;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 200ms cubic-bezier(0.16,1,0.3,1);
+  flex-shrink: 0;
+}
+
+.back-btn svg {
+  width: var(--nav-icon-size);
+  height: var(--nav-icon-size);
+  color: #1677FF;
+  stroke-width: 1.8;
+}
+
+.back-btn:active {
+  transform: scale(0.94);
+  background: #DDE7F5;
+}
+
+/* 子页面标题 */
+.top-nav .title {
+  flex: 1;
+  text-align: center;
+  font-size: 17px;
+  font-weight: 600;
+  color: #0F1B2D;
+  letter-spacing: 0.5px;
+  font-feature-settings: 'kern' 1, 'liga' 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 子页面副标题/面包屑 */
+.top-nav .subtitle {
+  font-size: 11px;
+  color: #1677FF;
+  font-weight: 500;
+}
+
+/* 右侧占位（保持标题居中） */
+.nav-spacer {
+  width: var(--nav-btn-size);
+  flex-shrink: 0;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ============================================
+   Component: Tab Bar
+   ============================================ */
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--tab-height) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--overlay);
+  backdrop-filter: blur(var(--overlay-blur));
+  -webkit-backdrop-filter: blur(var(--overlay-blur));
+  border-top: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  z-index: 100;
+}
+
+.tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-1) var(--space-3);
+  text-decoration: none;
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  transition: color 0.15s ease;
+  cursor: pointer;
+}
+
+.tab-item.active {
+  color: var(--brand);
+}
+
+.tab-item svg {
+  width: var(--icon-md);
+  height: var(--icon-md);
+}
+
+/* ============================================
+   Component: Heatmap Legend
+   ============================================ */
+.heatmap-legend {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  background: var(--overlay);
+  backdrop-filter: blur(var(--overlay-blur));
+  -webkit-backdrop-filter: blur(var(--overlay-blur));
+  border: var(--border);
+  border-radius: var(--radius);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  box-shadow: var(--shadow);
+}
+
+.legend-bar {
+  width: 60px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(90deg, var(--heatmap-weak), var(--heatmap-medium), var(--heatmap-strong));
+}
+
+/* ============================================
+   Utility: Scrollbar
+   ============================================ */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* ============================================
+   Utility: Selection
+   ============================================ */
+::selection {
+  background: var(--brand-muted);
+  color: var(--text-primary);
+}
