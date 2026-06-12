@@ -10,7 +10,9 @@ const FLOORPLAN_ROUTERS_KEY = 'floorplan_routers';
 
 // 路由器设备定义
 const ROUTER_DEVICES = [
-  { id: 'router1', name: '主路由', model: 'AX3600', status: 'online', coverageRadius: 100, color: 'rgba(22,119,255,0.08)' }
+  { id: 'router1', name: '主路由', model: 'AX3600', status: 'online', coverageRadius: 100, color: 'rgba(22,119,255,0.08)' },
+  { id: 'router2', name: '子路由A', model: 'AX1800', status: 'online', coverageRadius: 80, color: 'rgba(14,165,233,0.08)' },
+  { id: 'router3', name: '子路由B', model: 'AX1800', status: 'online', coverageRadius: 80, color: 'rgba(14,165,233,0.08)' }
 ];
 
 // ============ 房间模块定义 ============
@@ -61,7 +63,9 @@ function getRouterPositions() {
   }
   // 默认：主路由在客厅
   return [
-    { id: 'router1', x: 180, y: 300 }
+    { id: 'router1', x: 180, y: 300 },
+    { id: 'router2', x: 100, y: 120 },
+    { id: 'router3', x: 280, y: 120 }
   ];
 }
 

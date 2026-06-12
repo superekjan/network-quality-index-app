@@ -369,7 +369,8 @@
 
   .device-list {
     display: flex;
-    gap: var(--space-4);
+    flex-direction: column;
+    gap: var(--space-3);
   }
 
   .device-card {
@@ -785,12 +786,12 @@
     <!-- 网络总览 -->
     <div class="overview-card">
       <div class="overview-header">
-        <span class="label">网络总览</span>
+        <span class="label">网络质量指数</span>
         <span class="label" style="color:var(--accent-cyan)">实时</span>
       </div>
       <div class="overview-score">
         <span class="number">92</span>
-        <span class="unit">/ 100</span>
+        <span class="unit">分</span>
       </div>
       <div class="overview-metrics">
         <div class="metric-item">
@@ -806,7 +807,7 @@
           <div class="metric-label">ms 延迟</div>
         </div>
         <div class="metric-item">
-          <div class="metric-value">1</div>
+          <div class="metric-value">3</div>
           <div class="metric-label">设备在线</div>
         </div>
       </div>
@@ -818,11 +819,25 @@
         <span class="section-title">路由器</span>
       </div>
       <div class="device-list">
-        <div class="device-card" onclick="showDetail('router')">
+        <div class="device-card" onclick="showDetail('router1')">
           <svg class="card-icon icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <rect x="2" y="10" width="20" height="8" rx="2"/><line x1="6" y1="14" x2="6" y2="14.01"/><line x1="10" y1="14" x2="10" y2="14.01"/><path d="M12 10V6"/><path d="M8 6h8"/>
           </svg>
           <div class="card-name">主路由</div>
+          <div class="card-status status-online"><span class="status-dot"></span>在线</div>
+        </div>
+        <div class="device-card" onclick="showDetail('router2')">
+          <svg class="card-icon icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="10" width="20" height="8" rx="2"/><line x1="6" y1="14" x2="6" y2="14.01"/><line x1="10" y1="14" x2="10" y2="14.01"/><path d="M12 10V6"/><path d="M8 6h8"/>
+          </svg>
+          <div class="card-name">子路由A</div>
+          <div class="card-status status-online"><span class="status-dot"></span>在线</div>
+        </div>
+        <div class="device-card" onclick="showDetail('router3')">
+          <svg class="card-icon icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="10" width="20" height="8" rx="2"/><line x1="6" y1="14" x2="6" y2="14.01"/><line x1="10" y1="14" x2="10" y2="14.01"/><path d="M12 10V6"/><path d="M8 6h8"/>
+          </svg>
+          <div class="card-name">子路由B</div>
           <div class="card-status status-online"><span class="status-dot"></span>在线</div>
         </div>
       </div>
@@ -1007,7 +1022,9 @@ mainScroll.addEventListener('scroll', () => {
 }, { passive: true });
 
 const devices = {
-  router:  { name:'主路由',   location:'客厅 · 在线',     down:867, up:432, ping:3,  signal:92 }
+  router1: { name:'主路由',   location:'客厅 · 在线',     down:867, up:432, ping:3,  signal:92 },
+  router2: { name:'子路由A',  location:'主卧 · 在线',     down:540, up:260, ping:5,  signal:78 },
+  router3: { name:'子路由B',  location:'次卧 · 在线',     down:480, up:220, ping:6,  signal:72 }
 };
 
 // 设备详情
